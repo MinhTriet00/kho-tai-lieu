@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kho Tài Liệu Số</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+  :root { --bg: #f0f2f5; --surface: #ffffff; --border: #dadce0; --accent: #673ab7; --text: #202124; --muted: #5f6368; --radius: 8px; }
+  body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+  
+  /* Navbar */
+  nav { width: 100%; background: var(--surface); padding: 16px 32px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+  nav h1 { font-size: 22px; color: var(--accent); cursor: pointer; }
+  nav button { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: 500; cursor: pointer; }
+
+  .container { width: 100%; max-width: 900px; padding: 0 16px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* Giao diện Lưới Tài Liệu */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+  .doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column;}
+  .doc-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+  .doc-thumb { width: 100%; height: 280px; object-fit: cover; border-bottom: 1px solid var(--border); background: #eee; }
+  .doc-info { padding: 12px; }
+  .doc-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .doc-meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; }
+  .badge { background: #e8eaf6; color: #3f51b5; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+
+  /* Giao diện Form Upload (Google Form Style) */
+  .gform-header { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 12px; border: 1px solid var(--border); border-top: 10px solid var(--accent); }
+  .gform-card { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 12px; border: 1px solid var(--border); border-left: 3px solid transparent; transition: 0.2s; }
+  .gform-card:focus-within { border-left: 3px solid var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+  .gform-card label { display: block; font-size: 16px; margin-bottom: 16px; color: var(--text); }
+  .ginput { width: 100%; border: none; border-bottom: 1px solid var(--border); padding: 8px 0; font-size: 15px; outline: none; transition: border-color 0.2s; background: transparent; }
+  .ginput:focus { border-bottom: 2px solid var(--accent); margin-bottom: -1px; }
+  select.ginput { padding: 8px; cursor: pointer; }
+  
+  /* Dropzone */
+  #drop-zone { border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 4px; cursor: pointer; color: var(--muted); }
+  #drop-zone:hover { background: #f8f9fa; }
+
+  /* Giao diện Xem chi tiết */
+  .detail-header { margin-bottom: 20px; }
+  .detail-title { font-size: 24px; margin-bottom: 8px; }
+  .detail-desc { color: var(--muted); margin-top: 12px; line-height: 1.5; white-space: pre-wrap; }
+  .pdf-container { width: 100%; height: 75vh; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 20px; }
+  .pdf-container iframe { width: 100%; height: 100%; border: none; }
+  .btn-download { display: inline-block; padding: 10px 20px; background: #34a853; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; margin-top: 16px; }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <h1 onclick="switchView('home')">Kho Tài Liệu</h1>
+  <button onclick="switchView('upload')">Đăng tải (+)</button>
+</nav>
+
+<div class="container">
+  <div id="view-home" class="view active">
+    <div class="grid" id="doc-grid">Đang tải...</div>
+  </div>
+
+  <div id="view-upload" class="view">
+    <div class="gform-header">
+      <h2 style="font-size: 24px; margin-bottom: 8px;">Đăng tải tài liệu mới</h2>
+      <p style="color: var(--muted); font-size: 14px;">Mô tả và đính kèm file PDF để chia sẻ.</p>
+    </div>
+
+    <form id="upload-form">
+      <div class="gform-card">
+        <label>Tên tài liệu / Bài tập <span style="color:red">*</span></label>
+        <input type="text" id="up-title" class="ginput" placeholder="Ví dụ: Đề thi thử THPT Quốc gia 2026..." required>
+      </div>
+
+      <div class="gform-card" style="display: flex; gap: 20px;">
+        <div style="flex: 1;">
+          <label>Khối lớp <span style="color:red">*</span></label>
+          <select id="up-grade" class="ginput" required>
+            <option value="" disabled selected>Chọn khối</option>
+            <option value="Khối 10">Khối 10</option>
+            <option value="Khối 11">Khối 11</option>
+            <option value="Khối 12">Khối 12</option>
+            <option value="THCS">THCS</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label>Môn học <span style="color:red">*</span></label>
+          <select id="up-subject" class="ginput" required>
+            <option value="" disabled selected>Chọn môn</option>
+            <option value="Toán">Toán</option>
+            <option value="Vật Lý">Vật Lý</option>
+            <option value="Hóa Học">Hóa Học</option>
+            <option value="Ngữ Văn">Ngữ Văn</option>
+            <option value="Tiếng Anh">Tiếng Anh</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="gform-card">
+        <label>Mô tả / Lời dẫn</label>
+        <textarea id="up-desc" class="ginput" rows="3" placeholder="Trích dẫn nội dung, thông tin đề thi..."></textarea>
+      </div>
+
+      <div class="gform-card">
+        <label>File đính kèm (PDF) <span style="color:red">*</span></label>
+        <div id="drop-zone" onclick="document.getElementById('up-file').click()">
+          <span id="file-name-display">Nhấp để chọn file PDF</span>
+        </div>
+        <input type="file" id="up-file" accept=".pdf" style="display:none" required onchange="document.getElementById('file-name-display').innerText = this.files[0].name">
+      </div>
+
+      <button type="submit" id="submit-btn" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: 500; font-size: 15px; cursor: pointer;">Gửi tài liệu</button>
+    </form>
+  </div>
+
+  <div id="view-detail" class="view">
+    <div class="detail-header">
+      <div class="doc-meta" id="det-meta" style="margin-bottom: 8px;"></div>
+      <h2 class="detail-title" id="det-title">Tên tài liệu</h2>
+      <a href="#" id="det-download" class="btn-download" target="_blank">⬇ Tải file PDF</a>
+      <div class="detail-desc" id="det-desc"></div>
+    </div>
+    <div class="pdf-container">
+      <iframe id="det-iframe" src=""></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.origin + '/api';
+
+// --- Điều hướng SPA ---
+function switchView(viewName) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.getElementById(`view-${viewName}`).classList.add('active');
+  if (viewName === 'home') loadDocuments();
+}
+
+// --- Load lưới tài liệu ---
+async function loadDocuments() {
+  const res = await fetch(`${API}/documents`);
+  const docs = await res.json();
+  const grid = document.getElementById('doc-grid');
+  grid.innerHTML = '';
+  
+  docs.forEach(doc => {
+    const card = document.createElement('div');
+    card.className = 'doc-card';
+    card.onclick = () => openDetail(doc.id);
+    card.innerHTML = `
+      <img class="doc-thumb" src="${API}/files/thumb/${doc.thumb_filename}" alt="Bìa" loading="lazy">
+      <div class="doc-info">
+        <div class="doc-title">${doc.title}</div>
+        <div class="doc-meta">
+          <span class="badge">${doc.grade}</span>
+          <span class="badge" style="background:#e0f2f1; color:#009688;">${doc.subject}</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+// --- Mở trang chi tiết ---
+async function openDetail(id) {
+  const res = await fetch(`${API}/documents/${id}`);
+  const doc = await res.json();
+  
+  document.getElementById('det-title').textContent = doc.title;
+  document.getElementById('det-meta').innerHTML = `<span class="badge">${doc.grade}</span> <span class="badge" style="background:#e0f2f1; color:#009688;">${doc.subject}</span>`;
+  document.getElementById('det-desc').textContent = doc.description;
+  
+  const pdfUrl = `${API}/files/pdf/${doc.pdf_filename}`;
+  document.getElementById('det-download').href = pdfUrl;
+  document.getElementById('det-iframe').src = pdfUrl + "#toolbar=0&navpanes=0"; // Ẩn bớt thanh công cụ PDF mặc định
+  
+  switchView('detail');
+}
+
+// --- Upload Submit ---
+document.getElementById('upload-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const fileInput = document.getElementById('up-file');
+  if(!fileInput.files[0]) return alert("Vui lòng chọn file PDF!");
+
+  btn.disabled = true;
+  btn.textContent = "Đang xử lý & cắt ảnh bìa...";
+
+  const formData = new FormData();
+  formData.append('title', document.getElementById('up-title').value);
+  formData.append('grade', document.getElementById('up-grade').value);
+  formData.append('subject', document.getElementById('up-subject').value);
+  formData.append('description', document.getElementById('up-desc').value);
+  formData.append('file', fileInput.files[0]);
+
+  try {
+    const res = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+    if(res.ok) {
+      document.getElementById('upload-form').reset();
+      document.getElementById('file-name-display').innerText = "Nhấp để chọn file PDF";
+      switchView('home');
+    } else {
+      alert("Lỗi upload!");
+    }
+  } catch(e) {
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Gửi tài liệu";
+  }
+});
+
+// Khởi tạo
+switchView('home');
+</script>
+</body>
+</html>
