@@ -3,219 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kho Tài Liệu Số</title>
+<title>Kho Tài Liệu Lộ Vòng Cung</title>
 <style>
+  :root {
+    --bg: #f3f4f6; --surface: #ffffff; --border: #e5e7eb;
+    --primary: #6366f1; --primary-hover: #4f46e5;
+    --success: #22c55e; --danger: #ef4444; --warning: #f59e0b;
+    --text-main: #1f2937; --text-muted: #6b7280;
+    --tag-k10: #dbeafe; --tag-k10-text: #1e40af;
+    --tag-k11: #fce7f3; --tag-k11-text: #be185d;
+    --tag-k12: #fef3c7; --tag-k12-text: #b45309;
+    --tag-mon: #d1fae5; --tag-mon-text: #047857;
+  }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
-  :root { --bg: #f0f2f5; --surface: #ffffff; --border: #dadce0; --accent: #673ab7; --text: #202124; --muted: #5f6368; --radius: 8px; }
-  body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+  body { background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
   
-  /* Navbar */
-  nav { width: 100%; background: var(--surface); padding: 16px 32px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-  nav h1 { font-size: 22px; color: var(--accent); cursor: pointer; }
-  nav button { padding: 10px 20px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: 500; cursor: pointer; }
-
-  .container { width: 100%; max-width: 900px; padding: 0 16px; }
-  .view { display: none; }
-  .view.active { display: block; }
-
-  /* Giao diện Lưới Tài Liệu */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
-  .doc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column;}
-  .doc-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
-  .doc-thumb { width: 100%; height: 280px; object-fit: cover; border-bottom: 1px solid var(--border); background: #eee; }
-  .doc-info { padding: 12px; }
-  .doc-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .doc-meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; }
-  .badge { background: #e8eaf6; color: #3f51b5; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
-
-  /* Giao diện Form Upload (Google Form Style) */
-  .gform-header { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 12px; border: 1px solid var(--border); border-top: 10px solid var(--accent); }
-  .gform-card { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 12px; border: 1px solid var(--border); border-left: 3px solid transparent; transition: 0.2s; }
-  .gform-card:focus-within { border-left: 3px solid var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
-  .gform-card label { display: block; font-size: 16px; margin-bottom: 16px; color: var(--text); }
-  .ginput { width: 100%; border: none; border-bottom: 1px solid var(--border); padding: 8px 0; font-size: 15px; outline: none; transition: border-color 0.2s; background: transparent; }
-  .ginput:focus { border-bottom: 2px solid var(--accent); margin-bottom: -1px; }
-  select.ginput { padding: 8px; cursor: pointer; }
+  /* Navbar / Taskbar */
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+  .logo { font-size: 20px; font-weight: bold; color: var(--primary); cursor: pointer; }
+  .filters { display: flex; gap: 12px; }
+  .filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; cursor: pointer; background: var(--bg); }
+  .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: 0.2s; color: white; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+  .btn-primary { background: var(--primary); }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-success { background: var(--success); }
+  .btn-danger { background: var(--danger); }
   
-  /* Dropzone */
-  #drop-zone { border: 2px dashed var(--border); padding: 30px; text-align: center; border-radius: 4px; cursor: pointer; color: var(--muted); }
-  #drop-zone:hover { background: #f8f9fa; }
+  /* Main Container */
+  .container { padding: 32px; flex: 1; max-width: 1400px; margin: 0 auto; width: 100%; }
+  
+  /* Grid Layout (Trang chủ) */
+  #home-view { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+  .card-img { width: 100%; height: 320px; object-fit: cover; background: #f9fafb; border-bottom: 1px solid var(--border); }
+  .card-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-tags { display: flex; gap: 8px; margin-bottom: auto; flex-wrap: wrap; }
+  .tag { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .tag.k10 { background: var(--tag-k10); color: var(--tag-k10-text); }
+  .tag.k11 { background: var(--tag-k11); color: var(--tag-k11-text); }
+  .tag.k12 { background: var(--tag-k12); color: var(--tag-k12-text); }
+  .tag.mon { background: var(--tag-mon); color: var(--tag-mon-text); }
+  .card-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .status-badge { font-size: 12px; font-weight: bold; color: var(--warning); }
 
-  /* Giao diện Xem chi tiết */
-  .detail-header { margin-bottom: 20px; }
-  .detail-title { font-size: 24px; margin-bottom: 8px; }
-  .detail-desc { color: var(--muted); margin-top: 12px; line-height: 1.5; white-space: pre-wrap; }
-  .pdf-container { width: 100%; height: 75vh; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 20px; }
-  .pdf-container iframe { width: 100%; height: 100%; border: none; }
-  .btn-download { display: inline-block; padding: 10px 20px; background: #34a853; color: white; text-decoration: none; border-radius: 4px; font-weight: 500; margin-top: 16px; }
+  /* Preview Layout (Màn hình Xem chi tiết) */
+  #preview-view { display: none; flex-direction: column; gap: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .preview-header { display: flex; justify-content: space-between; align-items: center; }
+  .preview-title { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
+  .preview-actions { display: flex; gap: 12px; }
+  .preview-image { width: 100%; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  
+  /* Modal Đăng tải */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 50; }
+  .modal { background: var(--surface); padding: 24px; border-radius: 12px; width: 100%; max-width: 500px; }
+  .modal h2 { margin-bottom: 16px; font-size: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+  .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; cursor: pointer; }
 
+  #loader { text-align: center; color: var(--text-muted); margin-top: 40px; display: none; }
 </style>
 </head>
 <body>
 
-<nav>
-  <h1 onclick="switchView('home')">Kho Tài Liệu</h1>
-  <button onclick="switchView('upload')">Đăng tải (+)</button>
-</nav>
+<header>
+  <div class="logo" onclick="goHome()" oncontextmenu="adminLogin(event)">Kho Tài Liệu</div>
+  <div class="filters" id="filters-container">
+    <select id="filter-grade" onchange="renderGrid()">
+      <option value="all">Tất cả Khối</option>
+      <option value="Khối 10">Khối 10</option>
+      <option value="Khối 11">Khối 11</option>
+      <option value="Khối 12">Khối 12</option>
+      <option value="Khác">Khác</option>
+    </select>
+    <select id="filter-subject" onchange="renderGrid()">
+      <option value="all">Tất cả Môn</option>
+      <option value="Toán">Toán</option>
+      <option value="Vật lý">Vật lý</option>
+      <option value="Hóa học">Hóa học</option>
+      <option value="Sinh học">Sinh học</option>
+      <option value="Ngữ văn">Ngữ văn</option>
+      <option value="Lịch sử">Lịch sử</option>
+      <option value="Địa lý">Địa lý</option>
+      <option value="Tiếng Anh">Tiếng Anh</option>
+      <option value="Khác">Khác</option>
+    </select>
+    <button class="btn btn-primary" onclick="openModal()">Đăng tải (+)</button>
+  </div>
+</header>
 
 <div class="container">
-  <div id="view-home" class="view active">
-    <div class="grid" id="doc-grid">Đang tải...</div>
-  </div>
+  <div id="loader">Đang tải dữ liệu...</div>
+  <div id="home-view"></div>
 
-  <div id="view-upload" class="view">
-    <div class="gform-header">
-      <h2 style="font-size: 24px; margin-bottom: 8px;">Đăng tải tài liệu mới</h2>
-      <p style="color: var(--muted); font-size: 14px;">Mô tả và đính kèm file PDF để chia sẻ.</p>
+  <div id="preview-view">
+    <button class="btn-ghost" style="align-self: flex-start;" onclick="goHome()">← Quay lại danh sách</button>
+    <div class="preview-header">
+      <div>
+        <div class="card-tags" id="pv-tags" style="margin-bottom: 8px;"></div>
+        <h1 class="preview-title" id="pv-title">Tên tài liệu</h1>
+      </div>
+      <div class="preview-actions">
+        <button class="btn btn-danger" id="pv-delete-btn">Xóa file</button>
+        <button class="btn btn-success" id="pv-approve-btn" style="display:none;">Duyệt public</button>
+        <a href="#" target="_blank" class="btn btn-success" id="pv-download-btn">⬇ Tải file gốc</a>
+      </div>
     </div>
+    <img id="pv-image" class="preview-image" src="" alt="Preview">
+  </div>
+</div>
 
-    <form id="upload-form">
-      <div class="gform-card">
-        <label>Tên tài liệu / Bài tập <span style="color:red">*</span></label>
-        <input type="text" id="up-title" class="ginput" placeholder="Ví dụ: Đề thi thử THPT Quốc gia 2026..." required>
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <h2>Đăng tải tài liệu</h2>
+    <form id="upload-form" onsubmit="submitUpload(event)">
+      <div class="form-group">
+        <label>Chọn File (.pdf, .doc, .docx, .png, .jpg) - Tối đa 10MB</label>
+        <input type="file" id="up-file" class="form-control" required accept=".pdf,.doc,.docx,.png,.jpg,.jpeg">
       </div>
-
-      <div class="gform-card" style="display: flex; gap: 20px;">
-        <div style="flex: 1;">
-          <label>Khối lớp <span style="color:red">*</span></label>
-          <select id="up-grade" class="ginput" required>
-            <option value="" disabled selected>Chọn khối</option>
-            <option value="Khối 10">Khối 10</option>
-            <option value="Khối 11">Khối 11</option>
-            <option value="Khối 12">Khối 12</option>
-            <option value="THCS">THCS</option>
-          </select>
-        </div>
-        <div style="flex: 1;">
-          <label>Môn học <span style="color:red">*</span></label>
-          <select id="up-subject" class="ginput" required>
-            <option value="" disabled selected>Chọn môn</option>
-            <option value="Toán">Toán</option>
-            <option value="Vật Lý">Vật Lý</option>
-            <option value="Hóa Học">Hóa Học</option>
-            <option value="Ngữ Văn">Ngữ Văn</option>
-            <option value="Tiếng Anh">Tiếng Anh</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label>Khối</label>
+        <select id="up-grade" class="form-control" required>
+          <option value="Khối 10">Khối 10</option>
+          <option value="Khối 11">Khối 11</option>
+          <option value="Khối 12">Khối 12</option>
+          <option value="Khác">Khác</option>
+        </select>
       </div>
-
-      <div class="gform-card">
-        <label>Mô tả / Lời dẫn</label>
-        <textarea id="up-desc" class="ginput" rows="3" placeholder="Trích dẫn nội dung, thông tin đề thi..."></textarea>
+      <div class="form-group">
+        <label>Môn học</label>
+        <select id="up-subject" class="form-control" required>
+          <option value="Toán">Toán</option>
+          <option value="Vật lý">Vật lý</option>
+          <option value="Hóa học">Hóa học</option>
+          <option value="Sinh học">Sinh học</option>
+          <option value="Ngữ văn">Ngữ văn</option>
+          <option value="Lịch sử">Lịch sử</option>
+          <option value="Địa lý">Địa lý</option>
+          <option value="Tiếng Anh">Tiếng Anh</option>
+          <option value="Khác">Khác</option>
+        </select>
       </div>
-
-      <div class="gform-card">
-        <label>File đính kèm (PDF) <span style="color:red">*</span></label>
-        <div id="drop-zone" onclick="document.getElementById('up-file').click()">
-          <span id="file-name-display">Nhấp để chọn file PDF</span>
-        </div>
-        <input type="file" id="up-file" accept=".pdf" style="display:none" required onchange="document.getElementById('file-name-display').innerText = this.files[0].name">
+      <div class="form-group">
+        <label>Mã PIN bảo vệ (4 số - Dùng để tự xóa file sau này)</label>
+        <input type="password" id="up-pin" class="form-control" required pattern="[0-9]{4}" placeholder="Ví dụ: 1234">
       </div>
-
-      <button type="submit" id="submit-btn" style="padding: 12px 24px; background: var(--accent); color: white; border: none; border-radius: 4px; font-weight: 500; font-size: 15px; cursor: pointer;">Gửi tài liệu</button>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" onclick="closeModal()">Hủy</button>
+        <button type="submit" class="btn btn-primary" id="up-submit-btn">Đăng tài liệu</button>
+      </div>
     </form>
-  </div>
-
-  <div id="view-detail" class="view">
-    <div class="detail-header">
-      <div class="doc-meta" id="det-meta" style="margin-bottom: 8px;"></div>
-      <h2 class="detail-title" id="det-title">Tên tài liệu</h2>
-      <a href="#" id="det-download" class="btn-download" target="_blank">⬇ Tải file PDF</a>
-      <div class="detail-desc" id="det-desc"></div>
-    </div>
-    <div class="pdf-container">
-      <iframe id="det-iframe" src=""></iframe>
-    </div>
   </div>
 </div>
 
 <script>
-const API = window.location.origin + '/api';
+const API = window.location.origin + "/api";
+let allDocs = [];
+let currentDoc = null;
+let adminKey = localStorage.getItem('admin_key') || '';
 
-// --- Điều hướng SPA ---
-function switchView(viewName) {
-  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
-  document.getElementById(`view-${viewName}`).classList.add('active');
-  if (viewName === 'home') loadDocuments();
-}
+const $ = id => document.getElementById(id);
 
-// --- Load lưới tài liệu ---
+// Load dữ liệu
 async function loadDocuments() {
-  const res = await fetch(`${API}/documents`);
-  const docs = await res.json();
-  const grid = document.getElementById('doc-grid');
-  grid.innerHTML = '';
+  $('home-view').innerHTML = '';
+  $('loader').style.display = 'block';
+  try {
+    let url = `${API}/documents`;
+    if(adminKey) url += `?admin_key=${adminKey}`;
+    
+    const res = await fetch(url);
+    allDocs = await res.json();
+    renderGrid();
+  } catch (err) {
+    alert("Lỗi kết nối máy chủ!");
+  }
+  $('loader').style.display = 'none';
+}
+
+function getGradeClass(grade) {
+  if(grade.includes('10')) return 'k10';
+  if(grade.includes('11')) return 'k11';
+  if(grade.includes('12')) return 'k12';
+  return 'mon';
+}
+
+function renderGrid() {
+  const fg = $('filter-grade').value;
+  const fs = $('filter-subject').value;
   
-  docs.forEach(doc => {
-    const card = document.createElement('div');
-    card.className = 'doc-card';
-    card.onclick = () => openDetail(doc.id);
-    card.innerHTML = `
-      <img class="doc-thumb" src="${API}/files/thumb/${doc.thumb_filename}" alt="Bìa" loading="lazy">
-      <div class="doc-info">
-        <div class="doc-title">${doc.title}</div>
-        <div class="doc-meta">
-          <span class="badge">${doc.grade}</span>
-          <span class="badge" style="background:#e0f2f1; color:#009688;">${doc.subject}</span>
-        </div>
-      </div>
-    `;
-    grid.appendChild(card);
+  const filtered = allDocs.filter(d => {
+    return (fg === 'all' || d.grade === fg) && (fs === 'all' || d.subject === fs);
   });
+
+  const html = filtered.map(d => `
+    <div class="card" onclick='viewPreview(${JSON.stringify(d).replace(/'/g, "&#39;")})'>
+      <img class="card-img" src="${d.thumb_url}" alt="Thumb" loading="lazy">
+      <div class="card-body">
+        <div class="card-title">${d.original_name}</div>
+        <div class="card-tags">
+          <span class="tag ${getGradeClass(d.grade)}">${d.grade}</span>
+          <span class="tag mon">${d.subject}</span>
+        </div>
+        ${d.status === 'pending' ? `<div class="card-footer"><span class="status-badge">⏳ Chờ duyệt</span></div>` : ''}
+      </div>
+    </div>
+  `).join('');
+  
+  $('home-view').innerHTML = html || '<div style="grid-column: 1/-1; text-align:center; color:#6b7280;">Không có tài liệu nào phù hợp.</div>';
 }
 
-// --- Mở trang chi tiết ---
-async function openDetail(id) {
-  const res = await fetch(`${API}/documents/${id}`);
-  const doc = await res.json();
+// Chuyển trang
+function viewPreview(doc) {
+  currentDoc = doc;
+  $('home-view').style.display = 'none';
+  $('filters-container').style.display = 'none';
+  $('preview-view').style.display = 'flex';
   
-  document.getElementById('det-title').textContent = doc.title;
-  document.getElementById('det-meta').innerHTML = `<span class="badge">${doc.grade}</span> <span class="badge" style="background:#e0f2f1; color:#009688;">${doc.subject}</span>`;
-  document.getElementById('det-desc').textContent = doc.description;
+  $('pv-title').textContent = doc.original_name;
+  $('pv-tags').innerHTML = `
+    <span class="tag ${getGradeClass(doc.grade)}">${doc.grade}</span>
+    <span class="tag mon">${doc.subject}</span>
+    ${doc.status === 'pending' ? `<span class="tag" style="background:#fef3c7; color:#b45309">Chờ duyệt</span>` : ''}
+  `;
+  $('pv-image').src = doc.thumb_url;
+  $('pv-download-btn').href = doc.file_url;
+
+  // Quyền admin
+  $('pv-approve-btn').style.display = (adminKey && doc.status === 'pending') ? 'block' : 'none';
   
-  const pdfUrl = `${API}/files/pdf/${doc.pdf_filename}`;
-  document.getElementById('det-download').href = pdfUrl;
-  document.getElementById('det-iframe').src = pdfUrl + "#toolbar=0&navpanes=0"; // Ẩn bớt thanh công cụ PDF mặc định
-  
-  switchView('detail');
+  // Nút xóa
+  $('pv-delete-btn').onclick = async () => {
+    let pin = adminKey ? '' : prompt("Nhập mã PIN 4 số của bạn để xóa tài liệu này (Admin bỏ qua):");
+    if(pin === null) return;
+    
+    try {
+      let url = `${API}/documents/${doc.id}?`;
+      if(adminKey) url += `admin_key=${adminKey}`;
+      else url += `pin=${pin}`;
+
+      const res = await fetch(url, { method: 'DELETE' });
+      if(res.ok) { alert("Xóa thành công!"); goHome(); loadDocuments(); }
+      else { alert("Mã PIN không đúng hoặc có lỗi xảy ra!"); }
+    } catch(e) { alert("Lỗi mạng!"); }
+  };
+
+  // Nút Duyệt
+  $('pv-approve-btn').onclick = async () => {
+    try {
+      const res = await fetch(`${API}/approve/${doc.id}?admin_key=${adminKey}`, { method: 'POST' });
+      if(res.ok) { alert("Đã duyệt public!"); viewPreview({...doc, status: 'approved'}); loadDocuments(); }
+    } catch(e) { alert("Lỗi mạng!"); }
+  };
 }
 
-// --- Upload Submit ---
-document.getElementById('upload-form').addEventListener('submit', async (e) => {
+function goHome() {
+  $('preview-view').style.display = 'none';
+  $('home-view').style.display = 'grid';
+  $('filters-container').style.display = 'flex';
+  currentDoc = null;
+}
+
+// Upload file
+function openModal() { $('upload-modal').style.display = 'flex'; }
+function closeModal() { $('upload-modal').style.display = 'none'; $('upload-form').reset(); }
+
+async function submitUpload(e) {
   e.preventDefault();
-  const btn = document.getElementById('submit-btn');
-  const fileInput = document.getElementById('up-file');
-  if(!fileInput.files[0]) return alert("Vui lòng chọn file PDF!");
+  const file = $('up-file').files[0];
+  if(file.size > 10 * 1024 * 1024) return alert("File vượt quá 10MB!");
 
-  btn.disabled = true;
-  btn.textContent = "Đang xử lý & cắt ảnh bìa...";
+  $('up-submit-btn').disabled = true;
+  $('up-submit-btn').textContent = 'Đang tải lên...';
 
-  const formData = new FormData();
-  formData.append('title', document.getElementById('up-title').value);
-  formData.append('grade', document.getElementById('up-grade').value);
-  formData.append('subject', document.getElementById('up-subject').value);
-  formData.append('description', document.getElementById('up-desc').value);
-  formData.append('file', fileInput.files[0]);
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('grade', $('up-grade').value);
+  fd.append('subject', $('up-subject').value);
+  fd.append('pin', $('up-pin').value);
 
   try {
-    const res = await fetch(`${API}/upload`, { method: 'POST', body: formData });
+    const res = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+    const data = await res.json();
     if(res.ok) {
-      document.getElementById('upload-form').reset();
-      document.getElementById('file-name-display').innerText = "Nhấp để chọn file PDF";
-      switchView('home');
+      alert(data.msg);
+      closeModal();
+      loadDocuments();
     } else {
-      alert("Lỗi upload!");
+      alert("Lỗi: " + (data.detail || data.msg));
     }
-  } catch(e) {
-    console.error(e);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "Gửi tài liệu";
+  } catch (err) {
+    alert("Lỗi kết nối máy chủ");
   }
-});
 
-// Khởi tạo
-switchView('home');
+  $('up-submit-btn').disabled = false;
+  $('up-submit-btn').textContent = 'Đang tải tài liệu';
+}
+
+// Chế độ Admin ẩn (Click chuột phải vào chữ Kho Tài Liệu ở góc trái)
+function adminLogin(e) {
+  e.preventDefault();
+  const pass = prompt("Chế độ ẩn - Nhập mật khẩu Admin:");
+  if(pass) {
+    localStorage.setItem('admin_key', pass);
+    adminKey = pass;
+    alert("Đã kích hoạt quyền Admin. Bạn có thể xem và duyệt file ẩn.");
+    loadDocuments();
+  }
+}
+
+// Khởi chạy
+loadDocuments();
 </script>
 </body>
 </html>
