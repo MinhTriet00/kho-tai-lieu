@@ -1,0 +1,2 @@
+# host
+check gay %
