@@ -1,2 +1,0 @@
-# host
-check gay %
